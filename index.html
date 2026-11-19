@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MAXIMOFF – Mental Health Monitor</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#16324a;--bg:#eef3f6;--card:#fff;--accent:#2f7f86;--warm:#e8b04a;--danger:#c2443a;--soft:#dbe7ec}
+body{font-family:'Nunito',system-ui,sans-serif;background:var(--bg);color:var(--ink);transition:background .6s}
+h1,h2,h3,.mx-logo{font-family:'Fraunces',Georgia,serif;font-weight:700}
+.mx-nav{background:rgba(238,243,246,.92);backdrop-filter:blur(6px);border-bottom:1px solid var(--soft)}
+.mx-logo{letter-spacing:.12em;color:var(--ink)!important}
+.nav-link{color:var(--ink)!important;font-weight:600}
+.nav-link:hover{color:var(--accent)!important}
+.mx-hero{padding:4rem 0 2rem}
+.mx-hero h1{font-size:clamp(2rem,5vw,3.4rem);line-height:1.1;max-width:16ch}
+.mx-hero .lead{max-width:48ch;margin:1rem 0 1.5rem}
+.btn-mx{background:var(--ink);color:#fff;border:0;border-radius:.6rem;font-weight:700}
+.btn-mx:hover{background:var(--accent);color:#fff}
+.mx-orb{width:min(280px,70vw);aspect-ratio:1;margin:auto;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:radial-gradient(circle at 35% 30%,#fff,var(--orbc,#8fc9cc));box-shadow:0 0 0 14px rgba(47,127,134,.12),0 0 0 32px rgba(47,127,134,.07);
+  animation:breathe 6s ease-in-out infinite;transition:background .8s}
+.mx-orb span{font-family:'Fraunces',serif;font-size:4.5rem;font-weight:700;line-height:1}
+.mx-orb small{opacity:.7}
+@keyframes breathe{50%{transform:scale(1.05)}}
+.panel{background:var(--card);border-radius:1rem;padding:1.4rem;border:1px solid var(--soft)}
+.chat-log{height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:.6rem;padding:.5rem;background:var(--bg);border-radius:.8rem}
+.bubble{max-width:82%;padding:.6rem .9rem;border-radius:1rem;white-space:pre-wrap}
+.bubble.bot{background:#fff;border:1px solid var(--soft);align-self:flex-start;border-bottom-left-radius:.2rem}
+.bubble.me{background:var(--ink);color:#fff;align-self:flex-end;border-bottom-right-radius:.2rem}
+.note{font-size:.85rem;opacity:.75}
+.progress{background:var(--soft)}
+.progress-bar{background:var(--accent);transition:width .6s,background .6s}
+.act-card{cursor:pointer;height:100%;transition:border-color .2s}
+.act-card:hover,.act-card:focus-visible{border-color:var(--accent);outline:none}
+.act-card p{margin:0;font-size:.9rem}
+.bubble-pop{width:46px;height:46px;border-radius:50%;border:0;background:radial-gradient(circle at 30% 30%,#fff,#7bbcc2);margin:4px;box-shadow:inset 0 -3px 6px rgba(0,0,0,.15);transition:transform .15s,opacity .3s}
+.bubble-pop.popped{transform:scale(.3);opacity:.15}
+.breath{width:140px;height:140px;border-radius:50%;margin:1.5rem auto;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;animation:inhale 8s ease-in-out infinite}
+@keyframes inhale{0%,100%{transform:scale(.7)}50%{transform:scale(1.2)}}
+@media (prefers-reduced-motion:reduce){.mx-orb,.breath{animation:none}}
+.cam{width:160px;border-radius:.6rem;background:#000;display:block;margin-bottom:.3rem}
+.gcanvas{max-width:100%;border-radius:.6rem;border:1px solid var(--soft);touch-action:none;display:block;margin-bottom:.4rem}
+.bgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;max-width:360px}
+.blk{aspect-ratio:1;border:0;border-radius:.4rem;font-size:1.1rem;padding:0}
+.wall{display:grid;grid-template-columns:repeat(8,1fr);gap:3px;max-width:360px}
+.brick{height:30px;border:0;border-radius:3px;background:#b0654a;transition:transform .5s,opacity .5s}
+.brick.fell{transform:translateY(60px) rotate(25deg);opacity:0}
+.mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-width:300px}
+.mcard{aspect-ratio:1;border:0;border-radius:.6rem;background:var(--soft);font-size:1.6rem}
+.mcard.up{background:#fff;border:1px solid var(--accent)}
+
+/* ===== Visual upgrade ===== */
+body{background:linear-gradient(160deg,#e6f2f4 0%,#f8f0e6 55%,#e9eefb 100%);background-attachment:fixed;position:relative;overflow-x:hidden}
+body::before,body::after{content:"";position:fixed;z-index:-1;border-radius:50%;filter:blur(70px);opacity:.45;pointer-events:none}
+body::before{width:420px;height:420px;background:#8fd0d6;top:-120px;right:-100px}
+body::after{width:380px;height:380px;background:#f2c9a0;bottom:-120px;left:-100px}
+.mx-nav{background:rgba(255,255,255,.7);box-shadow:0 2px 18px rgba(22,50,74,.06)}
+.mx-logo{background:linear-gradient(90deg,#16324a,#2f7f86);-webkit-background-clip:text;background-clip:text;color:transparent!important}
+.mx-hero h1{background:linear-gradient(100deg,#16324a 30%,#2f7f86);-webkit-background-clip:text;background-clip:text;color:transparent}
+.btn-mx{background:linear-gradient(135deg,#16324a,#2f7f86);box-shadow:0 6px 16px rgba(47,127,134,.3);transition:transform .15s,box-shadow .15s}
+.btn-mx:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(47,127,134,.38);background:linear-gradient(135deg,#1c4160,#37939b)}
+.mx-orb{box-shadow:0 0 0 14px rgba(47,127,134,.12),0 0 0 32px rgba(47,127,134,.07),0 30px 60px rgba(47,127,134,.3)}
+.panel{background:rgba(255,255,255,.78);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.9);border-radius:1.3rem;box-shadow:0 10px 34px rgba(22,50,74,.08)}
+.chat-log{background:linear-gradient(180deg,#f3f8f9,#eaf2f5)}
+.bubble.me{background:linear-gradient(135deg,#16324a,#2f7f86)}
+.bubble.bot{box-shadow:0 2px 8px rgba(22,50,74,.06)}
+.chips{display:flex;gap:.5rem;flex-wrap:wrap}
+.chip{border:1px solid var(--soft);background:#fff;border-radius:2rem;padding:.35rem 1rem;font-weight:700;color:var(--ink)}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.act-card{display:flex;flex-direction:column;gap:.25rem;transition:transform .2s,box-shadow .2s,border-color .2s}
+.act-card:hover,.act-card:focus-visible{transform:translateY(-4px);box-shadow:0 16px 34px rgba(47,127,134,.18)}
+.act-ico{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:1.5rem;background:linear-gradient(135deg,#dff0f2,#f6e9d6);margin-bottom:.3rem}
+#gameArea{border:2px solid rgba(47,127,134,.25)}
+.scape{height:130px;border-radius:1rem;margin-bottom:1rem;position:relative;overflow:hidden}
+.scape.rain{background:linear-gradient(#5b7a92,#8aa6b8)}
+.scape.ocean{background:linear-gradient(#a7dbe4,#2f7f86)}
+.scape i{position:absolute;display:block}
+.scape.rain i{top:-20px;width:2px;height:24px;background:rgba(255,255,255,.6);animation:drop .9s linear infinite}
+.scape.rain i:nth-child(1){left:20%}.scape.rain i:nth-child(2){left:50%;animation-delay:.3s}.scape.rain i:nth-child(3){left:80%;animation-delay:.6s}
+@keyframes drop{to{transform:translateY(170px)}}
+.scape.ocean i{left:-10%;width:120%;height:60px;border-radius:50%;background:rgba(255,255,255,.35);bottom:-30px;animation:swell 5s ease-in-out infinite}
+.scape.ocean i:nth-child(2){animation-delay:1.2s;bottom:-42px}.scape.ocean i:nth-child(3){animation-delay:2.4s;bottom:-54px}
+@keyframes swell{50%{transform:translateY(-22px)}}
+.chimes{display:flex;gap:10px;align-items:flex-start;justify-content:center;height:100px}
+.chime{width:22px;border:0;border-radius:11px;background:linear-gradient(#c9d7df,#7f9bab);transform-origin:top;transition:transform .2s}
+.chime.ring{animation:sway .5s}
+@keyframes sway{25%{transform:rotate(12deg)}75%{transform:rotate(-10deg)}}
+.sky{background:#0f2540}
+.popit{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;max-width:300px;margin-bottom:.6rem}
+.dot{aspect-ratio:1;border:0;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff8,var(--c));box-shadow:inset 0 -4px 6px rgba(0,0,0,.2),0 3px 5px rgba(0,0,0,.15);transition:all .12s}
+.dot.in{box-shadow:inset 0 4px 8px rgba(0,0,0,.35);transform:scale(.88);filter:saturate(.7)}
+.jar{display:flex;flex-wrap:wrap-reverse;align-content:flex-start;gap:4px;min-height:120px;max-width:200px;margin:1rem auto 0;padding:10px;border:3px solid #9cc3c9;border-radius:12px 12px 36px 36px;background:rgba(255,255,255,.5)}
+.marble{width:22px;height:22px;border-radius:50%;box-shadow:inset -3px -3px 5px rgba(0,0,0,.2),inset 3px 3px 5px rgba(255,255,255,.5)}
+.sky2{position:relative;height:240px;overflow:hidden;border-radius:1rem;background:linear-gradient(#bfe3ef,#f9f1e1)}
+.balloon{position:absolute;bottom:-60px;width:42px;height:52px;border:0;border-radius:50% 50% 48% 48%;animation:rise linear forwards}
+@keyframes rise{to{transform:translateY(-320px)}}
+.echo{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:240px}
+.pad{aspect-ratio:1;border:0;border-radius:1rem;opacity:.55;transition:opacity .15s,transform .15s}
+.pad.lit{opacity:1;transform:scale(1.06);box-shadow:0 0 24px currentColor}
+@media (prefers-reduced-motion:reduce){.scape i,.chime.ring,.balloon{animation:none}}
+
+/* ===== Visual refresh ===== */
+body{background:linear-gradient(160deg,#e3f0f3 0%,#f1ecf6 55%,#fdf1e4 100%) fixed}
+.mx-hero{position:relative;overflow:hidden;padding:4.5rem 0 3rem}
+.mx-hero::before,.mx-hero::after{content:"";position:absolute;border-radius:50%;filter:blur(60px);opacity:.55;z-index:0;animation:drift 14s ease-in-out infinite alternate}
+.mx-hero::before{width:380px;height:380px;background:#8fd0d4;top:-120px;left:-80px}
+.mx-hero::after{width:320px;height:320px;background:#f2c6d4;bottom:-120px;right:5%;animation-delay:-6s}
+.mx-hero .container{position:relative;z-index:1}
+@keyframes drift{to{transform:translate(60px,40px) scale(1.15)}}
+.mx-hero h1{background:linear-gradient(90deg,#16324a,#2f7f86 70%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.panel{background:rgba(255,255,255,.78);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.9);box-shadow:0 10px 30px rgba(22,50,74,.08);border-radius:1.2rem}
+.btn-mx{background:linear-gradient(135deg,#16324a,#2f7f86);padding:.55rem 1.2rem;box-shadow:0 6px 16px rgba(47,127,134,.3)}
+.btn-mx:hover{transform:translateY(-1px);background:linear-gradient(135deg,#1d4466,#3a9aa2)}
+.bubble.me{background:linear-gradient(135deg,#16324a,#2f7f86)}
+.bubble{box-shadow:0 2px 8px rgba(22,50,74,.07)}
+.act-card{position:relative;text-align:left;transition:transform .2s,box-shadow .2s}
+.act-card:hover,.act-card:focus-visible{transform:translateY(-4px);box-shadow:0 14px 30px rgba(22,50,74,.16)}
+.act-ico{font-size:1.8rem;width:52px;height:52px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,#e1f1f3,#f6e9f1);margin-bottom:.6rem}
+.tag{position:absolute;top:.8rem;right:.8rem;font-size:.7rem;font-weight:700;padding:.15rem .55rem;border-radius:1rem;background:var(--soft)}
+.chip{box-shadow:0 2px 6px rgba(22,50,74,.06)}
+.bowl-wrap{display:grid;place-items:center;padding:1rem}
+.bowl{width:130px;height:130px;border-radius:50%;border:0;font-size:3rem;background:radial-gradient(circle at 35% 30%,#fff,#e8c77a);box-shadow:0 10px 24px rgba(160,120,40,.35)}
+.bowl.ring{animation:ringo 2.5s ease-out}
+@keyframes ringo{0%{box-shadow:0 0 0 0 rgba(232,199,122,.7)}100%{box-shadow:0 0 0 70px rgba(232,199,122,0)}}
+.scape.fire{background:linear-gradient(#2a1510,#b5532a)}
+.scape.fire i{bottom:-20px;width:44px;height:70px;border-radius:50% 50% 40% 40%;background:radial-gradient(#ffd27a,#ff8a3d 60%,transparent 70%);animation:flick 1.1s ease-in-out infinite alternate}
+.scape.fire i:nth-child(1){left:38%}.scape.fire i:nth-child(2){left:48%;animation-delay:.3s;height:90px}.scape.fire i:nth-child(3){left:58%;animation-delay:.6s}
+@keyframes flick{to{transform:scale(1.2,.85);opacity:.8}}
+.soap-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;max-width:340px}
+.soap{aspect-ratio:1.3;border:0;border-radius:.5rem;box-shadow:inset 0 -4px 6px rgba(0,0,0,.08);transition:transform .35s,opacity .35s}
+.soap.cut{transform:scale(.4) rotate(12deg);opacity:0}
+.lsky{position:relative;height:240px;border-radius:1rem;overflow:hidden;background:linear-gradient(#162a4a,#5b4a8a 70%,#e99a7a);cursor:pointer}
+.lan{position:absolute;bottom:-30px;font-size:1.8rem;animation:float 7s ease-in forwards;filter:drop-shadow(0 0 12px #ffb35c)}
+@keyframes float{to{transform:translateY(-290px) translateX(18px);opacity:0}}
+@media (prefers-reduced-motion:reduce){.mx-hero::before,.mx-hero::after,.lan,.scape.fire i{animation:none}}
+</style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-md sticky-top mx-nav">
+  <div class="container">
+    <a class="navbar-brand mx-logo" href="#top">MAXIMOFF</a>
+    <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#nav" aria-label="Menu"><span class="navbar-toggler-icon"></span></button>
+    <div class="collapse navbar-collapse" id="nav">
+      <ul class="navbar-nav ms-auto align-items-md-center gap-md-2">
+        <li class="nav-item"><a class="nav-link" href="#chat">Talk</a></li>
+        <li class="nav-item"><a class="nav-link" href="#score">My score</a></li>
+        <li class="nav-item"><a class="nav-link" href="#activities">Activities</a></li>
+        <li class="nav-item"><a class="nav-link" href="#counsellor">Counsellor</a></li>
+        <li class="nav-item"><a class="nav-link" href="#how">How it works</a></li>
+        <li class="nav-item">
+          <select id="lang" class="form-select form-select-sm" aria-label="Language">
+            <option value="en">English</option><option value="ta">தமிழ்</option><option value="hi">हिन्दी</option>
+          </select>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<header id="top" class="mx-hero">
+  <div class="container">
+    <div class="row align-items-center g-4">
+      <div class="col-lg-7">
+        <h1>A friend who notices how you're really doing.</h1>
+        <p class="lead">MAXIMOFF listens to your words, scores your distress as you talk, and offers calming activities. If things look serious, it connects you with a counsellor.</p>
+        <a href="#chat" class="btn btn-mx btn-lg">Start talking</a>
+      </div>
+      <div class="col-lg-5">
+        <div class="mx-orb" aria-hidden="true"><span id="orbScore">0</span><small>distress</small></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="container py-5">
+  <div class="row g-4">
+    <section id="chat" class="col-lg-7">
+      <div class="panel">
+        <h2 class="h4">Talk to MAXIMOFF</h2>
+        <div id="log" class="chat-log" aria-live="polite"></div>
+        <div class="input-group mt-3">
+          <input id="msg" class="form-control" placeholder="Type how you feel…" autocomplete="off">
+          <button id="mic" class="btn btn-outline-secondary" aria-label="Speak">Speak</button>
+          <button id="send" class="btn btn-mx">Send</button>
+        </div>
+        <div class="d-flex flex-wrap gap-3 align-items-center mt-2 small">
+          <span>Voice tone: <strong id="voiceState">off</strong></span>
+          <span>Face: <strong id="faceState">off</strong></span>
+          <button id="camBtn" class="btn btn-sm btn-outline-secondary">Turn on camera</button>
+        </div>
+        <div id="camBox" class="d-none mt-2">
+          <video id="cam" class="cam" autoplay muted playsinline></video>
+          <p class="note mb-0">Video stays on your device. Expression reading here is a demo placeholder.</p>
+        </div>
+        <p class="note mt-2 mb-0">Demo prototype. It reads text only and is not a medical diagnosis.</p>
+      </div>
+    </section>
+
+    <section id="score" class="col-lg-5">
+      <div class="panel">
+        <h2 class="h4">Distress score card</h2>
+        <div class="d-flex justify-content-between"><span>Current level</span><strong id="levelName">Calm</strong></div>
+        <div class="progress my-2" style="height:14px"><div id="bar" class="progress-bar" style="width:0%"></div></div>
+        <div class="d-flex justify-content-between small"><span>0</span><span>100</span></div>
+        <hr>
+        <canvas id="trend" height="110" aria-label="Score trend"></canvas>
+        <hr>
+        <div class="d-flex justify-content-between"><span>Predicted risk (next 7 days)</span><strong id="risk">Low</strong></div>
+        <div id="alertBox" class="alert alert-danger mt-3 d-none" role="alert"></div>
+      </div>
+    </section>
+  </div>
+
+  <section id="activities" class="mt-5">
+    <h2 class="h4">Suggested for you</h2>
+    <p id="actHint" class="note">Activities change with your score.</p>
+    <div class="chips mb-3">
+      <button class="chip on" data-f="all">All</button><button class="chip" data-f="sound">Sounds &amp; ASMR</button><button class="chip" data-f="game">Games &amp; calm play</button>
+    </div>
+    <div id="actList" class="row g-3"></div>
+    <div id="gameArea" class="panel mt-3 d-none">
+      <div class="d-flex justify-content-between align-items-center">
+        <h3 id="gameTitle" class="h5 mb-0"></h3>
+        <button id="gameClose" class="btn btn-sm btn-outline-secondary">Close</button>
+      </div>
+      <div id="gameBody" class="mt-3"></div>
+    </div>
+  </section>
+
+  <section id="counsellor" class="mt-5">
+    <h2 class="h4">Counsellor dashboard</h2>
+    <p class="note">Users who reach the risk zone appear here. Stored in this browser only (demo).</p>
+    <div class="panel table-responsive">
+      <table class="table align-middle mb-0">
+        <thead><tr><th>Time</th><th>User</th><th>Score</th><th>Language</th><th>Alert</th><th>Status</th></tr></thead>
+        <tbody id="dashBody"></tbody>
+      </table>
+      <p id="dashEmpty" class="note mb-0 mt-2">No alerts yet. Send a high-distress message in the chat to see one.</p>
+    </div>
+  </section>
+
+  <section id="how" class="mt-5">
+    <h2 class="h4">How it works</h2>
+    <div class="row g-3">
+      <div class="col-md-3"><div class="panel h-100"><h3 class="h6">1. Listen</h3><p class="mb-0 small">Reads messages in English, Tamil or Hindi. Voice and face signals are planned for the full build.</p></div></div>
+      <div class="col-md-3"><div class="panel h-100"><h3 class="h6">2. Score</h3><p class="mb-0 small">Each message updates a running 0–100 distress score.</p></div></div>
+      <div class="col-md-3"><div class="panel h-100"><h3 class="h6">3. Support</h3><p class="mb-0 small">Music, breathing and games are matched to your level.</p></div></div>
+      <div class="col-md-3"><div class="panel h-100"><h3 class="h6">4. Escalate</h3><p class="mb-0 small">In the risk zone, SMS, IVRS and counsellor follow-up are triggered.</p></div></div>
+    </div>
+  </section>
+</main>
+
+<footer class="py-4 text-center note">
+  MAXIMOFF · Team MAXIMOFF · SIH26094. In India, Tele-MANAS offers free 24/7 support: 14416 or 1-800-891-4416.
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+/* MAXIMOFF – demo logic. Keyword-based scoring stands in for the real NLP / voice / face models. */
+const $ = id => document.getElementById(id);
+
+// Keyword lexicons (English, Tamil, Hindi). weight = distress added per hit.
+const LEX = {
+  high: ['suicide','kill myself','end it','die','hopeless','worthless','no reason to live','தற்கொலை','சாக','நம்பிக்கை இல்லை','मरना','आत्महत्या','जीना नहीं'],
+  mid:  ['scared','afraid','panic','anxious','trauma','nightmare','hurt','abuse','alone','cry','can\'t sleep','பயம்','அழுகை','தனிமை','தூக்கம் இல்லை','डर','अकेला','रोना','नींद नहीं'],
+  low:  ['sad','tired','stress','worried','angry','upset','நிம்மதி இல்லை','கவலை','கோபம்','दुखी','चिंता','थका','गुस्सा'],
+  good: ['happy','good','better','calm','fine','relaxed','thank','மகிழ்ச்சி','நன்றி','நல்ல','खुश','अच्छा','धन्यवाद','बेहतर']
+};
+const T = {
+  en: {hello:"Hi, I'm MAXIMOFF. How are you feeling today?",
+       calm:"I'm glad to hear that. Want to tell me more about your day?",
+       mild:"That sounds heavy. I'm here. What has been weighing on you most?",
+       mod:"Thank you for trusting me with this. Let's slow down together. I've picked a few calming activities below.",
+       high:"I'm really concerned about you. You don't have to carry this alone. I'm alerting a counsellor now. If you are in immediate danger, call 14416 (Tele-MANAS) or 112.",
+       alert:"Risk zone. SMS sent, IVRS call scheduled, counsellor follow-up requested (simulated)."},
+  ta: {hello:"வணக்கம், நான் MAXIMOFF. இன்று எப்படி இருக்கிறீர்கள்?",
+       calm:"மகிழ்ச்சி. உங்கள் நாளைப் பற்றி மேலும் சொல்லுங்கள்.",
+       mild:"அது கடினமாகத் தெரிகிறது. நான் இங்கே இருக்கிறேன். எது உங்களை அதிகம் பாதிக்கிறது?",
+       mod:"என்னிடம் பகிர்ந்ததற்கு நன்றி. மெதுவாகச் செல்வோம். கீழே சில அமைதியான செயல்பாடுகளைத் தேர்ந்தெடுத்துள்ளேன்.",
+       high:"உங்களைப் பற்றி கவலைப்படுகிறேன். நீங்கள் தனியாக இல்லை. ஆலோசகருக்குத் தெரிவிக்கிறேன். உடனடி ஆபத்து என்றால் 14416 அல்லது 112 அழைக்கவும்.",
+       alert:"ஆபத்து நிலை. SMS, IVRS அழைப்பு, ஆலோசகர் தொடர்பு (மாதிரி)."},
+  hi: {hello:"नमस्ते, मैं MAXIMOFF हूँ। आज आप कैसा महसूस कर रहे हैं?",
+       calm:"यह सुनकर अच्छा लगा। अपने दिन के बारे में और बताइए।",
+       mild:"यह भारी लगता है। मैं यहाँ हूँ। सबसे ज़्यादा क्या परेशान कर रहा है?",
+       mod:"मुझ पर भरोसा करने के लिए धन्यवाद। हम धीरे चलेंगे। नीचे कुछ शांत करने वाली गतिविधियाँ हैं।",
+       high:"मुझे आपकी चिंता है। आप अकेले नहीं हैं। मैं काउंसलर को सूचित कर रहा हूँ। तुरंत खतरा हो तो 14416 या 112 पर कॉल करें।",
+       alert:"जोखिम क्षेत्र। SMS, IVRS कॉल और काउंसलर फॉलो-अप (डेमो)।"}
+};
+
+let score = 0, history = [0];
+const lang = () => $('lang').value;
+
+function analyse(text){
+  const t = text.toLowerCase(); let d = 0;
+  LEX.high.forEach(w => t.includes(w) && (d += 35));
+  LEX.mid.forEach(w => t.includes(w) && (d += 15));
+  LEX.low.forEach(w => t.includes(w) && (d += 8));
+  LEX.good.forEach(w => t.includes(w) && (d -= 12));
+  return d;
+}
+function level(s){ return s>=70?['Risk zone','#c2443a']:s>=45?['High','#d9822b']:s>=20?['Elevated','#e8b04a']:['Calm','#2f7f86']; }
+function riskLabel(){
+  const recent = history.slice(-4), trend = recent[recent.length-1] - recent[0];
+  const p = score + Math.max(trend,0)*0.5;
+  return p>=70?'High':p>=40?'Medium':'Low';
+}
+
+function addBubble(text, who){
+  const b = document.createElement('div'); b.className = 'bubble ' + who; b.textContent = text;
+  $('log').appendChild(b); $('log').scrollTop = 1e6;
+}
+
+function update(){
+  const [name, col] = level(score);
+  $('orbScore').textContent = score;
+  $('levelName').textContent = name;
+  $('bar').style.width = score + '%'; $('bar').style.background = col;
+  document.documentElement.style.setProperty('--orbc', col + '99');
+  $('risk').textContent = riskLabel();
+  drawTrend(); renderActivities();
+}
+
+function drawTrend(){
+  const c = $('trend'), w = c.width = c.clientWidth, h = c.height;
+  const g = c.getContext('2d'); g.clearRect(0,0,w,h);
+  g.strokeStyle = '#2f7f86'; g.lineWidth = 2.5; g.beginPath();
+  history.forEach((v,i) => {
+    const x = history.length===1 ? 0 : i*(w-8)/(history.length-1)+4, y = h-6-(v/100)*(h-12);
+    i ? g.lineTo(x,y) : g.moveTo(x,y);
+  });
+  g.stroke();
+}
+
+function respond(delta){
+  const L = T[lang()]; let r;
+  if (score >= 70) r = L.high; else if (score >= 45) r = L.mod; else if (score >= 20 || delta > 0) r = L.mild; else r = L.calm;
+  setTimeout(() => addBubble(r,'bot'), 450);
+  const box = $('alertBox');
+  if (score >= 70){ box.textContent = L.alert; box.classList.remove('d-none'); }
+  else box.classList.add('d-none');
+}
+
+function send(){
+  const text = $('msg').value.trim(); if(!text) return;
+  addBubble(text,'me'); $('msg').value = '';
+  const d = analyse(text) + signalBoost();
+  // Score drifts toward new evidence; calm messages ease it down slowly.
+  score = Math.max(0, Math.min(100, Math.round(score*0.7 + d + (d===0 ? 0 : score*0.0))));
+  if (d > 0) score = Math.min(100, score + Math.round(d*0.3));
+  history.push(score); update(); respond(d); logSession();
+}
+
+// ---------- Activities ----------
+const ACTS = [
+  {id:'breathe', name:'Guided breathing', desc:'A slow 8-second breathing circle.', min:0},
+  {id:'music',   name:'Calming music',    desc:'Soft instrumental playlist (opens search).', min:0},
+  {id:'asmr',    name:'ASMR videos',      desc:'Whispers and tapping (opens search).', min:0},
+  {id:'bubbles', name:'Bubble pop game',  desc:'Pop bubbles to release tension.', min:20},
+  {id:'wash',    name:'Wash simulator',   desc:'Drag to scrub the dirt off.', min:20},
+  {id:'bloom',   name:'Bloom Blox',       desc:'Tap matching blocks to bloom.', min:20},
+  {id:'teardown',name:'Tear Down',        desc:'Knock down a brick wall safely.', min:45},
+  {id:'memory',  name:'Memory garden',    desc:'Match the pairs, no timer.', min:0},
+  {id:'doodle',  name:'Calm doodle',      desc:'Draw freely. Nothing is saved.', min:0},
+  {id:'counsel', name:'Talk to a counsellor', desc:'Request a callback.', min:45}
+];
+function renderActivities(){
+  const list = ACTS.filter(a => score >= a.min && (actFilter==='all' || (actFilter==='sound') === (KIND[a.id]==='sound')));
+  $('actList').innerHTML = list.map(a =>
+    `<div class="col-6 col-md-4 col-lg-3"><div class="panel act-card" tabindex="0" role="button" data-id="${a.id}"><div class="act-ico">${ICON[a.id]||'✨'}</div><h3 class="h6">${a.name}</h3><p>${a.desc}</p><span class="tag">${KIND[a.id]==='sound'?'sound':'game'}</span></div></div>`).join('');
+  document.querySelectorAll('.act-card').forEach(el => {
+    el.onclick = () => openAct(el.dataset.id);
+    el.onkeydown = e => { if (e.key==='Enter'||e.key===' '){ e.preventDefault(); openAct(el.dataset.id); } };
+  });
+}
+function openAct(id){
+  stopAll(); const body = $('gameBody'), a = ACTS.find(x => x.id===id);
+  $('gameArea').classList.remove('d-none'); $('gameTitle').textContent = a.name; body.innerHTML = '';
+  if (GAMES2[id]) GAMES2[id](body);
+  else if (id==='breathe') body.innerHTML = '<div class="breath">Breathe</div><p class="text-center note">In as it grows, out as it shrinks.</p>';
+  else if (id==='wash') washGame(body);
+  else if (id==='bloom') bloomGame(body);
+  else if (id==='teardown') tearGame(body);
+  else if (id==='memory') memoryGame(body);
+  else if (id==='doodle') doodleGame(body);
+  else if (NEW[id]) NEW[id](body);
+  else if (id==='bubbles') {
+    const n = id==='bubbles' ? 40 : 24;
+    for (let i=0;i<n;i++){
+      const b = document.createElement('button'); b.className='bubble-pop'; b.setAttribute('aria-label', id==='bubbles'?'Pop':'Scrub');
+      if (id==='wash') b.style.background = 'radial-gradient(circle,#8a6a4a,#5b4630)';
+      b.onclick = () => { b.classList.add('popped'); if(!body.querySelector('.bubble-pop:not(.popped)')) body.insertAdjacentHTML('beforeend','<p class="mt-3 mb-0"><strong>All clear. Nice work.</strong></p>'); };
+      body.appendChild(b);
+    }
+  }
+  else if (id==='music' || id==='asmr') {
+    const q = id==='music' ? 'calming instrumental music' : 'relaxing ASMR rain sounds';
+    body.innerHTML = `<a class="btn btn-mx" target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=${encodeURIComponent(q)}">Open ${a.name}</a>`;
+  }
+  else if (id==='counsel') body.innerHTML = '<p>A counsellor callback has been requested (simulated). Tele-MANAS: <strong>14416</strong> (free, 24/7).</p>';
+  $('gameArea').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+
+// ---------- More in-built games ----------
+function washGame(body){
+  body.innerHTML = '<canvas id="wc" width="360" height="220" class="gcanvas"></canvas><p id="wp" class="note mb-0">Cleaned: 0%</p>';
+  const c = $('wc'), g = c.getContext('2d');
+  g.fillStyle = '#cfe6ea'; g.fillRect(0,0,360,220);
+  g.fillStyle = '#2f7f86'; g.fillRect(60,70,240,80); g.fillStyle = '#16324a'; g.fillRect(100,40,160,40);
+  g.beginPath(); g.arc(110,155,20,0,7); g.arc(250,155,20,0,7); g.fill();
+  const d = document.createElement('canvas'); d.width = 360; d.height = 220;
+  const dg = d.getContext('2d'); dg.fillStyle = '#6b4f35'; dg.fillRect(0,0,360,220);
+  for (let i=0;i<300;i++){ dg.fillStyle = `rgba(60,40,20,${Math.random()*.5})`; dg.beginPath(); dg.arc(Math.random()*360,Math.random()*220,Math.random()*10,0,7); dg.fill(); }
+  const paint = () => { g.drawImage(d,0,0); };
+  const base = g.getImageData(0,0,360,220); g.putImageData(base,0,0);
+  const clean = document.createElement('canvas'); clean.width = 360; clean.height = 220;
+  clean.getContext('2d').putImageData(base,0,0);
+  const mask = dg; let down = false, n = 0;
+  const redraw = () => { g.drawImage(clean,0,0); g.drawImage(d,0,0); };
+  redraw();
+  const scrub = e => {
+    if (!down) return; const r = c.getBoundingClientRect();
+    const x = (e.clientX-r.left)*360/r.width, y = (e.clientY-r.top)*220/r.height;
+    mask.globalCompositeOperation = 'destination-out'; mask.beginPath(); mask.arc(x,y,18,0,7); mask.fill(); redraw();
+    if (++n % 15 === 0){ const px = mask.getImageData(0,0,360,220).data; let t = 0; for (let i=3;i<px.length;i+=160) if (px[i]<30) t++; const p = Math.min(100, Math.round(t/(px.length/160)*100)); $('wp').textContent = p>=95 ? 'Sparkling clean. Nice work.' : 'Cleaned: ' + p + '%'; }
+  };
+  c.onpointerdown = e => { down = true; c.setPointerCapture(e.pointerId); scrub(e); };
+  c.onpointermove = scrub; c.onpointerup = () => down = false;
+}
+
+function bloomGame(body){
+  const cols = ['#e07a8a','#e8b04a','#7bbcc2','#8fbf7a'], R = 7, C = 8; let grid = [], left = R*C;
+  body.innerHTML = '<div id="bg" class="bgrid"></div><p id="bm" class="note mt-2 mb-0">Tap a group of 2 or more matching blocks.</p><button id="br" class="btn btn-sm btn-outline-secondary mt-2">New board</button>';
+  const draw = () => {
+    $('bg').innerHTML = '';
+    grid.forEach((v,i) => { const b = document.createElement('button'); b.className = 'blk'; b.setAttribute('aria-label','block');
+      if (v === null){ b.textContent = '🌸'; b.disabled = true; b.style.background = 'transparent'; } else b.style.background = cols[v];
+      b.onclick = () => pick(i); $('bg').appendChild(b); });
+  };
+  const pick = i => {
+    const col = grid[i], seen = new Set(), st = [i];
+    while (st.length){ const k = st.pop(); if (seen.has(k) || grid[k] !== col) continue; seen.add(k);
+      const r = Math.floor(k/C), c = k%C;
+      if (r>0) st.push(k-C); if (r<R-1) st.push(k+C); if (c>0) st.push(k-1); if (c<C-1) st.push(k+1); }
+    if (seen.size < 2) return;
+    seen.forEach(k => grid[k] = null); left -= seen.size; draw();
+    if (left === 0) $('bm').textContent = 'The whole garden bloomed. Well done.';
+  };
+  const reset = () => { grid = Array.from({length:R*C}, () => Math.floor(Math.random()*cols.length)); left = R*C; draw(); $('bm').textContent = 'Tap a group of 2 or more matching blocks.'; };
+  $('br').onclick = reset; reset();
+}
+
+function tearGame(body){
+  body.innerHTML = '<div id="wall" class="wall"></div><button id="ball" class="btn btn-mx btn-sm mt-3">Swing the wrecking ball</button> <button id="wr" class="btn btn-sm btn-outline-secondary mt-3">Rebuild</button><p id="tm" class="note mt-2 mb-0">Tap bricks to knock them down.</p>';
+  const build = () => { $('wall').innerHTML = ''; $('tm').textContent = 'Tap bricks to knock them down.';
+    for (let i=0;i<40;i++){ const b = document.createElement('button'); b.className = 'brick'; b.setAttribute('aria-label','brick');
+      b.onclick = () => fall(b); $('wall').appendChild(b); } };
+  const fall = b => { b.classList.add('fell'); b.disabled = true; check(); };
+  const check = () => { if (!document.querySelector('.brick:not(.fell)')) $('tm').textContent = 'All down. Take a slow breath.'; };
+  $('ball').onclick = () => { const up = [...document.querySelectorAll('.brick:not(.fell)')]; up.sort(() => Math.random()-.5).slice(0,10).forEach(fall); };
+  $('wr').onclick = build; build();
+}
+
+function memoryGame(body){
+  const em = ['🌿','🌸','🌊','🌙','☀️','🐚'], deck = [...em,...em].sort(() => Math.random()-.5);
+  let open = [], found = 0;
+  body.innerHTML = '<div class="mgrid" id="mg"></div><p id="mm" class="note mt-2 mb-0">Flip two cards to find a pair.</p>';
+  deck.forEach(e => { const b = document.createElement('button'); b.className = 'mcard'; b.textContent = '?'; b.dataset.e = e;
+    b.onclick = () => { if (open.length === 2 || b.classList.contains('up')) return; b.classList.add('up'); b.textContent = e; open.push(b);
+      if (open.length === 2){ if (open[0].dataset.e === open[1].dataset.e){ found++; open = []; if (found === em.length) $('mm').textContent = 'All pairs found. Lovely.'; }
+        else setTimeout(() => { open.forEach(x => { x.classList.remove('up'); x.textContent = '?'; }); open = []; }, 800); } };
+    $('mg').appendChild(b); });
+}
+
+function doodleGame(body){
+  body.innerHTML = '<canvas id="dc" width="360" height="220" class="gcanvas" style="background:#fff;touch-action:none"></canvas><button id="dclr" class="btn btn-sm btn-outline-secondary mt-2">Clear</button>';
+  const c = $('dc'), g = c.getContext('2d'); let down = false, hue = 180;
+  g.lineWidth = 6; g.lineCap = 'round';
+  c.onpointerdown = e => { down = true; c.setPointerCapture(e.pointerId); const p = pos(e); g.beginPath(); g.moveTo(p.x,p.y); };
+  c.onpointermove = e => { if (!down) return; const p = pos(e); hue = (hue+2)%360; g.strokeStyle = `hsl(${hue},55%,55%)`; g.lineTo(p.x,p.y); g.stroke(); };
+  c.onpointerup = () => down = false;
+  const pos = e => { const r = c.getBoundingClientRect(); return {x:(e.clientX-r.left)*360/r.width, y:(e.clientY-r.top)*220/r.height}; };
+  $('dclr').onclick = () => g.clearRect(0,0,360,220);
+}
+
+// ---------- 10 more sounds, ASMR and calm games ----------
+let actFilter = 'all', cleanup = [], AC;
+const stopAll = () => { cleanup.forEach(f => { try{f()}catch(e){} }); cleanup = []; };
+const ac = () => AC || (AC = new (window.AudioContext||window.webkitAudioContext)());
+function tone(f, t=1.5, v=.15){ const c = ac(), o = c.createOscillator(), g = c.createGain(); c.resume();
+  o.frequency.value = f; g.gain.setValueAtTime(v, c.currentTime); g.gain.exponentialRampToValueAtTime(.001, c.currentTime+t);
+  o.connect(g).connect(c.destination); o.start(); o.stop(c.currentTime+t); }
+function noiseSrc(){ const c = ac(), b = c.createBuffer(1, c.sampleRate*2, c.sampleRate), d = b.getChannelData(0);
+  for (let i=0;i<d.length;i++) d[i] = Math.random()*2-1; const s = c.createBufferSource(); s.buffer = b; s.loop = true; return s; }
+const loop = fn => { let id; const f = t => { fn(t); id = requestAnimationFrame(f); }; id = requestAnimationFrame(f); cleanup.push(() => cancelAnimationFrame(id)); };
+
+function scape(body, kind){
+  body.innerHTML = `<div class="scape ${kind}"><i></i><i></i><i></i></div><button id="sp" class="btn btn-mx">Play</button>
+    <input id="sv" type="range" min="0" max="100" value="40" class="form-range d-inline-block w-50 align-middle ms-2" aria-label="Volume">
+    <p class="note mt-2 mb-0">Sound is made live in your browser.</p>`;
+  let n, g, l;
+  const start = () => { const x = ac(); x.resume(); n = noiseSrc(); const f = x.createBiquadFilter(); g = x.createGain(); g.gain.value = $('sv').value/200;
+    if (kind==='rain'){ f.type = 'bandpass'; f.frequency.value = 2500; f.Q.value = .4; }
+    else { f.type = 'lowpass'; f.frequency.value = 600; l = x.createOscillator(); l.frequency.value = .12; const d = x.createGain(); d.gain.value = .12; l.connect(d).connect(g.gain); l.start(); }
+    n.connect(f).connect(g).connect(x.destination); n.start(); $('sp').textContent = 'Pause'; };
+  const stop = () => { try{ n && n.stop(); l && l.stop(); }catch(e){} n = l = null; const b = $('sp'); if (b) b.textContent = 'Play'; };
+  $('sp').onclick = () => n ? stop() : start(); $('sv').oninput = () => g && (g.gain.value = $('sv').value/200); cleanup.push(stop);
+}
+
+const GAMES2 = {
+  rain: b => scape(b,'rain'),
+  ocean: b => scape(b,'ocean'),
+  chimes: b => {
+    b.innerHTML = '<div class="chimes" id="ch"></div><p class="note mt-2 mb-0">Tap the chimes. Any order sounds good.</p>';
+    [392,440,523,587,659,784,880].forEach((f,i) => { const k = document.createElement('button'); k.className = 'chime'; k.style.height = (90-i*7)+'px';
+      k.setAttribute('aria-label','Chime '+(i+1)); k.onclick = () => { tone(f,2.5,.12); k.classList.add('ring'); setTimeout(() => k.classList.remove('ring'),500); }; $('ch').appendChild(k); });
+  },
+  sand: b => {
+    b.innerHTML = '<canvas id="sc" width="360" height="220" class="gcanvas"></canvas><button id="sx" class="btn btn-sm btn-outline-secondary">Smooth the sand</button>';
+    const c = $('sc'), g = c.getContext('2d'); let down = false, last;
+    const flat = () => { g.fillStyle = '#e9d9b4'; g.fillRect(0,0,360,220); for (let i=0;i<500;i++){ g.fillStyle = 'rgba(150,120,70,.12)'; g.fillRect(Math.random()*360,Math.random()*220,1.5,1.5); } };
+    flat();
+    const P = e => { const r = c.getBoundingClientRect(); return [(e.clientX-r.left)*360/r.width, (e.clientY-r.top)*220/r.height]; };
+    c.onpointerdown = e => { down = true; c.setPointerCapture(e.pointerId); last = P(e); };
+    c.onpointermove = e => { if (!down) return; const p = P(e);
+      [-8,0,8].forEach(o => { g.strokeStyle = 'rgba(130,100,55,.55)'; g.lineWidth = 2; g.beginPath(); g.moveTo(last[0]+o,last[1]); g.lineTo(p[0]+o,p[1]); g.stroke();
+        g.strokeStyle = 'rgba(255,248,225,.6)'; g.beginPath(); g.moveTo(last[0]+o+2,last[1]); g.lineTo(p[0]+o+2,p[1]); g.stroke(); }); last = p; };
+    c.onpointerup = () => down = false; $('sx').onclick = flat;
+  },
+  popit: b => {
+    b.innerHTML = '<div class="popit" id="pi"></div><p class="note mt-2 mb-0">Press each dot. Reset when you are done.</p><button id="pr" class="btn btn-sm btn-outline-secondary">Reset</button>';
+    const cols = ['#e07a8a','#e8b04a','#7bbcc2','#8fbf7a','#a58ad6','#f09a5b'];
+    const build = () => { $('pi').innerHTML = ''; for (let i=0;i<36;i++){ const d = document.createElement('button'); d.className = 'dot'; d.style.setProperty('--c', cols[Math.floor(i/6)]);
+      d.setAttribute('aria-label','Dot'); d.onclick = () => { if (d.classList.toggle('in')) tone(180+Math.random()*120,.12,.2); }; $('pi').appendChild(d); } };
+    $('pr').onclick = build; build();
+  },
+  stars: b => {
+    b.innerHTML = '<canvas id="st" width="360" height="220" class="gcanvas sky"></canvas><p class="note mb-0">Tap the sky to place a star.</p>';
+    const c = $('st'), g = c.getContext('2d'), S = [];
+    c.onpointerdown = e => { const r = c.getBoundingClientRect(); S.push({x:(e.clientX-r.left)*360/r.width, y:(e.clientY-r.top)*220/r.height, p:Math.random()*6, s:2+Math.random()*3}); tone(600+Math.random()*500,1.2,.06); };
+    loop(t => { g.fillStyle = '#0f2540'; g.fillRect(0,0,360,220); S.forEach(s => { const a = .5+.5*Math.sin(t/500+s.p); g.fillStyle = `rgba(255,244,200,${a})`; g.shadowColor = '#ffe9a8'; g.shadowBlur = 10; g.beginPath(); g.arc(s.x,s.y,s.s*(.7+.3*a),0,7); g.fill(); }); g.shadowBlur = 0; });
+  },
+  jar: b => {
+    b.innerHTML = '<div class="d-flex gap-2"><input id="ji" class="form-control" placeholder="One small thing that went okay today"><button id="ja" class="btn btn-mx">Add</button></div><div class="jar" id="jj"></div><ul id="jl" class="small mt-2 mb-0"></ul>';
+    const cols = ['#e07a8a','#e8b04a','#7bbcc2','#8fbf7a','#a58ad6'];
+    const add = () => { const v = $('ji').value.trim(); if (!v) return; const m = document.createElement('span'); m.className = 'marble'; m.style.background = cols[Math.floor(Math.random()*5)]; m.title = v; $('jj').appendChild(m);
+      const li = document.createElement('li'); li.textContent = v; $('jl').appendChild(li); $('ji').value = ''; tone(520,.5,.08); };
+    $('ja').onclick = add; $('ji').onkeydown = e => { if (e.key==='Enter') add(); };
+  },
+  balloons: b => {
+    b.innerHTML = '<div class="sky2" id="bs"></div><p id="bc" class="note mt-2 mb-0">Popped: 0</p>'; let n = 0;
+    const mk = () => { const e = document.createElement('button'); e.className = 'balloon'; e.style.left = Math.random()*85+'%'; e.style.background = `hsl(${Math.random()*360},65%,68%)`;
+      e.style.animationDuration = 7+Math.random()*5+'s'; e.setAttribute('aria-label','Balloon');
+      e.onclick = () => { e.remove(); $('bc').textContent = 'Popped: '+(++n); tone(300+Math.random()*200,.15,.2); }; e.onanimationend = () => e.remove(); $('bs').appendChild(e); };
+    mk(); const id = setInterval(mk, 900); cleanup.push(() => clearInterval(id));
+  },
+  echo: b => {
+    const fr = [262,330,392,523], cl = ['#e07a8a','#e8b04a','#7bbcc2','#8fbf7a']; let seq = [], pos = 0, busy = true;
+    b.innerHTML = '<div class="echo" id="ec"></div><p id="em" class="note mt-2 mb-0">Press Start. Repeat the pattern of lights and tones.</p><button id="es" class="btn btn-mx btn-sm">Start</button>';
+    const pads = fr.map((f,i) => { const p = document.createElement('button'); p.className = 'pad'; p.style.background = cl[i]; p.setAttribute('aria-label','Pad '+(i+1)); p.onclick = () => press(i); $('ec').appendChild(p); return p; });
+    const flash = i => { pads[i].classList.add('lit'); tone(fr[i],.6); setTimeout(() => pads[i].classList.remove('lit'),350); };
+    const play = () => { busy = true; pos = 0; $('em').textContent = 'Watch…'; seq.forEach((s,k) => setTimeout(() => flash(s), k*700+400)); setTimeout(() => { busy = false; $('em').textContent = 'Your turn.'; }, seq.length*700+500); };
+    const press = i => { if (busy) return; flash(i);
+      if (i === seq[pos]){ if (++pos === seq.length){ seq.push(Math.floor(Math.random()*4)); busy = true; $('em').textContent = 'Well done. Next round…'; setTimeout(play,900); } }
+      else { $('em').textContent = 'No rush. Press Start to try again.'; seq = []; busy = true; } };
+    $('es').onclick = () => { seq = [Math.floor(Math.random()*4)]; play(); };
+  },
+  fireflies: b => {
+    b.innerHTML = '<canvas id="ff" width="360" height="220" class="gcanvas sky"></canvas><p class="note mb-0">Move over the canvas. The fireflies drift toward you.</p>';
+    const c = $('ff'), g = c.getContext('2d'); let mx = 180, my = 110;
+    const F = Array.from({length:26}, () => ({x:Math.random()*360, y:Math.random()*220, vx:0, vy:0, p:Math.random()*6}));
+    c.onpointermove = e => { const r = c.getBoundingClientRect(); mx = (e.clientX-r.left)*360/r.width; my = (e.clientY-r.top)*220/r.height; };
+    loop(t => { g.fillStyle = 'rgba(10,26,40,.35)'; g.fillRect(0,0,360,220);
+      F.forEach(f => { f.vx += (Math.random()-.5)*.25 + (mx-f.x)*.0006; f.vy += (Math.random()-.5)*.25 + (my-f.y)*.0006; f.vx *= .96; f.vy *= .96; f.x += f.vx; f.y += f.vy;
+        const a = .4+.6*Math.abs(Math.sin(t/700+f.p)); g.fillStyle = `rgba(230,255,140,${a})`; g.shadowColor = '#d6ff6a'; g.shadowBlur = 12; g.beginPath(); g.arc(f.x,f.y,2.4,0,7); g.fill(); }); g.shadowBlur = 0; });
+  }
+};
+const KIND = {music:'sound', asmr:'sound', rain:'sound', ocean:'sound', chimes:'sound', sand:'sound'};
+const ICON = {breathe:'🫧', music:'🎵', asmr:'🎧', bubbles:'🔵', wash:'🚿', bloom:'🌸', teardown:'🧱', memory:'🃏', doodle:'🖍️', counsel:'📞',
+  rain:'🌧️', ocean:'🌊', chimes:'🔔', sand:'🏜️', popit:'🟣', stars:'✨', jar:'🫙', balloons:'🎈', echo:'🎹', fireflies:'🌙'};
+ACTS.push(
+  {id:'rain', name:'Rain sounds', desc:'Steady rain you can play for as long as you like.', min:0},
+  {id:'ocean', name:'Ocean waves', desc:'Slow waves rolling in and out.', min:0},
+  {id:'chimes', name:'Wind chimes', desc:'Tap soft chimes tuned to a gentle scale.', min:0},
+  {id:'sand', name:'Zen sand garden', desc:'Drag to rake calming lines in the sand.', min:0},
+  {id:'popit', name:'Pop-it board', desc:'Press the dots, hear the soft pops.', min:0},
+  {id:'stars', name:'Starry sky', desc:'Tap to place twinkling stars.', min:0},
+  {id:'jar', name:'Gratitude jar', desc:'Drop in small good moments as marbles.', min:0},
+  {id:'balloons', name:'Balloon float', desc:'Pop balloons as they drift upward.', min:20},
+  {id:'echo', name:'Calm echo', desc:'Repeat a gentle pattern of lights and tones.', min:20},
+  {id:'fireflies', name:'Firefly night', desc:'Guide glowing fireflies with your pointer.', min:0}
+);
+document.querySelectorAll('.chip').forEach(c => c.onclick = () => { actFilter = c.dataset.f; document.querySelectorAll('.chip').forEach(x => x.classList.toggle('on', x===c)); renderActivities(); });
+
+
+// ---------- Four extra calm activities (use the shared sound helpers above) ----------
+Object.assign(ICON,{fire:'🔥', bowl:'🔔', soap:'🧼', lantern:'🏮'});
+Object.assign(KIND,{fire:'sound', bowl:'sound'});
+ACTS.push(
+  {id:'fire', name:'Campfire', desc:'Soft crackles and a warm glow.', min:0},
+  {id:'bowl', name:'Singing bowl', desc:'Tap to ring a deep, long tone.', min:0},
+  {id:'soap', name:'Soap cutting', desc:'Slice soft blocks, one by one.', min:20},
+  {id:'lantern', name:'Lantern sky', desc:'Send lanterns floating up.', min:0}
+);
+const NEW = {
+  fire: b => {
+    b.innerHTML = '<div class="scape fire"><i></i><i></i><i></i></div><button id="fp" class="btn btn-mx">Pause</button><p class="note mt-2 mb-0">Sound is made live in your browser.</p>';
+    let n, t; const start = () => { const x = ac(); x.resume(); n = noiseSrc(); const f = x.createBiquadFilter(), g = x.createGain(); f.type = 'lowpass'; f.frequency.value = 320; g.gain.value = .08;
+      n.connect(f).connect(g).connect(x.destination); n.start(); t = setInterval(() => { const s = noiseSrc(), h = x.createBiquadFilter(), v = x.createGain(); h.type = 'highpass'; h.frequency.value = 2500;
+        v.gain.setValueAtTime(.15+Math.random()*.25, x.currentTime); v.gain.exponentialRampToValueAtTime(.001, x.currentTime+.06); s.connect(h).connect(v).connect(x.destination); s.start(); s.stop(x.currentTime+.08); }, 380); $('fp').textContent = 'Pause'; };
+    const stop = () => { try{ n && n.stop(); }catch(e){} clearInterval(t); n = null; const p = $('fp'); if (p) p.textContent = 'Play'; };
+    $('fp').onclick = () => n ? stop() : start(); start(); cleanup.push(stop);
+  },
+  bowl: b => {
+    b.innerHTML = '<div class="bowl-wrap"><button id="bw" class="bowl" aria-label="Ring the bowl">🔔</button></div><p class="note text-center mb-0">Tap to ring. Breathe with the sound.</p>';
+    $('bw').onclick = () => { tone(220,6,.22); tone(442,5,.08); tone(663,4,.04); const e = $('bw'); e.classList.remove('ring'); void e.offsetWidth; e.classList.add('ring'); };
+  },
+  soap: b => {
+    b.innerHTML = '<div class="soap-grid" id="sg"></div><p id="sm" class="note mt-2 mb-0">Tap blocks to slice them.</p><button id="sr2" class="btn btn-sm btn-outline-secondary mt-2">New soap</button>';
+    const cs = ['#f6c6d0','#cfe8f0','#d8ecc8','#f3e3b5','#dccdf0'];
+    const build = () => { $('sg').innerHTML = ''; $('sm').textContent = 'Tap blocks to slice them.';
+      for (let i=0;i<24;i++){ const s = document.createElement('button'); s.className = 'soap'; s.style.background = cs[Math.floor(Math.random()*5)]; s.setAttribute('aria-label','soap');
+        s.onclick = () => { s.classList.add('cut'); s.disabled = true; tone(900+Math.random()*300,.06,.12); if (!document.querySelector('.soap:not(.cut)')) $('sm').textContent = 'All sliced. So satisfying.'; }; $('sg').appendChild(s); } };
+    $('sr2').onclick = build; build();
+  },
+  lantern: b => {
+    b.innerHTML = '<div id="sky" class="lsky"></div><p class="note mt-2 mb-0">Tap the sky to release a lantern.</p>';
+    $('sky').onpointerdown = e => { const r = $('sky').getBoundingClientRect(), l = document.createElement('span'); l.className = 'lan'; l.textContent = '🏮';
+      l.style.left = (e.clientX-r.left-14)+'px'; $('sky').appendChild(l); tone(392,2,.08); setTimeout(() => l.remove(), 7000); };
+  }
+};
+
+// ---------- Init ----------
+$('gameClose').onclick = () => { stopAll(); $('gameArea').classList.add('d-none'); };
+$('send').onclick = send;
+$('msg').onkeydown = e => { if (e.key==='Enter') send(); };
+$('lang').onchange = () => addBubble(T[lang()].hello,'bot');
+window.addEventListener('resize', drawTrend);
+addBubble(T.en.hello,'bot'); update();
+
+// ---------- Voice input: speech-to-text + tone check ----------
+let voiceBoost = 0, faceBoost = 0, audioCtx, analyser, toneTimer, rec, listening = false;
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+const LOCALE = {en:'en-IN', ta:'ta-IN', hi:'hi-IN'};
+
+function signalBoost(){ const b = voiceBoost + faceBoost; voiceBoost = 0; return b; }
+
+async function startTone(){
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    analyser = audioCtx.createAnalyser(); analyser.fftSize = 1024;
+    audioCtx.createMediaStreamSource(stream).connect(analyser);
+    const buf = new Uint8Array(analyser.fftSize), levels = [];
+    toneTimer = setInterval(() => {
+      analyser.getByteTimeDomainData(buf);
+      let sum = 0; buf.forEach(v => sum += (v-128)**2);
+      levels.push(Math.sqrt(sum/buf.length));
+    }, 100);
+    return {stream, levels};
+  }catch(e){ $('voiceState').textContent = 'mic blocked'; return null; }
+}
+function stopTone(t){
+  clearInterval(toneTimer); t.stream.getTracks().forEach(x => x.stop()); audioCtx.close();
+  const l = t.levels.filter(v => v > 2); if (l.length < 5) return;
+  const mean = l.reduce((a,b)=>a+b)/l.length;
+  const sd = Math.sqrt(l.reduce((a,b)=>a+(b-mean)**2,0)/l.length);
+  // Loud or very uneven speech is treated as a stress hint (rough proxy, needs a trained model).
+  voiceBoost = (mean > 25 || sd/mean > 0.8) ? 10 : 0;
+  $('voiceState').textContent = voiceBoost ? 'tense' : 'steady';
+}
+$('mic').onclick = async () => {
+  if (!SR){ addBubble('Voice input is not supported in this browser. Try Chrome or Edge.','bot'); return; }
+  if (listening){ rec.stop(); return; }
+  const tone = await startTone(); if (!tone) return;
+  rec = new SR(); rec.lang = LOCALE[lang()]; rec.interimResults = false;
+  rec.onstart = () => { listening = true; $('mic').textContent = 'Stop'; $('voiceState').textContent = 'listening'; };
+  rec.onresult = e => { $('msg').value = e.results[0][0].transcript; };
+  rec.onend = () => { listening = false; $('mic').textContent = 'Speak'; stopTone(tone); if ($('msg').value.trim()) send(); };
+  rec.onerror = () => { $('voiceState').textContent = 'error'; };
+  rec.start();
+};
+
+// ---------- Camera permission flow (demo expression reading) ----------
+let camStream, faceTimer;
+$('camBtn').onclick = async () => {
+  if (camStream){ stopCam(); return; }
+  if (!confirm('MAXIMOFF will use your camera to read facial expression. Video stays on your device. Continue?')) return;
+  try{
+    camStream = await navigator.mediaDevices.getUserMedia({video:true});
+    $('cam').srcObject = camStream; $('camBox').classList.remove('d-none');
+    $('camBtn').textContent = 'Turn off camera'; $('faceState').textContent = 'reading (demo)';
+    // Placeholder: swap this for a real expression model (e.g. a face-api.js or MediaPipe classifier).
+    faceTimer = setInterval(() => {
+      const r = Math.random();
+      faceBoost = r > 0.9 ? 6 : 0;
+      $('faceState').textContent = faceBoost ? 'tense (demo)' : 'neutral (demo)';
+    }, 3000);
+  }catch(e){ $('faceState').textContent = 'camera blocked'; }
+};
+function stopCam(){
+  camStream.getTracks().forEach(t => t.stop()); camStream = null; clearInterval(faceTimer);
+  faceBoost = 0; $('camBox').classList.add('d-none'); $('camBtn').textContent = 'Turn on camera'; $('faceState').textContent = 'off';
+}
+
+// ---------- Counsellor dashboard ----------
+let sessions = [];
+try { sessions = JSON.parse(localStorage.getItem('mx_sessions') || '[]'); } catch(e){}
+const userId = 'User-' + Math.floor(1000 + Math.random()*9000);
+function save(){ try { localStorage.setItem('mx_sessions', JSON.stringify(sessions)); } catch(e){} }
+function logSession(){
+  if (score < 70) return;
+  const last = sessions[0];
+  if (last && last.user === userId && last.status !== 'Followed up'){ last.score = score; last.time = new Date().toLocaleTimeString(); }
+  else sessions.unshift({user:userId, score, lang:lang(), time:new Date().toLocaleTimeString(), status:'New'});
+  save(); renderDash();
+}
+function renderDash(){
+  $('dashEmpty').classList.toggle('d-none', sessions.length > 0);
+  $('dashBody').innerHTML = sessions.map((s,i) => `<tr>
+    <td>${s.time}</td><td>${s.user}</td><td><strong>${s.score}</strong></td><td>${s.lang.toUpperCase()}</td>
+    <td>SMS + IVRS sent</td>
+    <td>${s.status==='Followed up' ? '<span class="badge text-bg-success">Followed up</span>'
+        : `<button class="btn btn-sm btn-mx" data-i="${i}">Mark followed up</button>`}</td></tr>`).join('');
+  $('dashBody').querySelectorAll('button').forEach(b => b.onclick = () => { sessions[b.dataset.i].status = 'Followed up'; save(); renderDash(); });
+}
+renderDash();
+</script>
+</body>
+</html>
